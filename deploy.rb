@@ -1,23 +1,26 @@
-#!/usr/bin/ruby
+#!/usr/local/bin/ruby
 #
-require 'rubygems'
-require 'slop'
-require 'yaml'
+#
+require 'pushycat'
 
-config = YAML.load_file("deploy.yml")
-config.each {|key, value| instance_variable_set("@#{key}", value)}
+pc = Pushycat.new
 
-opts = Slop.parse do
-  on :s, :server, 'Server to be deployed'
-  on :b, :branch, 'Branch to use'
-  on :c, :copy, 'second server to copy war to', :optional => true
-  on :n, :nostart, 'avoid restarting the server', :optional => true
-  on :h, :help, 'Print this message', :tail => true do
-    puts help
-    exit
+pc.what_to_do
+
+puts "Do you want to deploy? (y/n)"
+answer = STDIN.gets.chomp
+
+if answer.downcase == "n"
+  exit
+elsif answer.downcase == "y"
+  pc.get_sources
+  pc.build_war
+  pc.copy_war
+
+  unless pc.nostart == true 
+    pc.stop_tomcat
+    pc.clean_webapps
+    pc.install_war
+    pc.start_tomcat
   end
 end
-
-@server = opts.server if opts.server?
-@branch = opts.branch if opts.branch?
-@
