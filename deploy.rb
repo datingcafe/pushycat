@@ -1,7 +1,8 @@
 #!/usr/local/bin/ruby
 #
 #
-require 'pushycat'
+directory = File.dirname(__FILE__)
+require "#{directory}/pushycat"
 
 pc = Pushycat.new
 

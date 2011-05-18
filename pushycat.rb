@@ -12,7 +12,8 @@ class Pushycat
   end
 
   def load_config
-    config = YAML.load_file("pushycat.yml")
+    directory = File.dirname(__FILE__)
+    config = YAML.load_file("#{directory}/pushycat.yml")
     config.each {|key, value| instance_variable_set("@#{key}", value)}
   end
 
@@ -22,6 +23,8 @@ class Pushycat
       on :b, :branch, 'Branch to use', :optional => true
       on :n, :nostart, 'avoid restarting the server'
       on :v, :version, 'use an older war version YYYYMMDDHHMM', :optional => true
+      on :u, :user, 'user for ssh login', :optional => true   
+      on :t, :tomcat, 'user for tomcat', :optional => true   
       on :h, :help, 'Print this message', :tail => true do
         puts help
         exit
@@ -29,6 +32,8 @@ class Pushycat
     end
     @server = opts[:server] if opts.server?
     @branch = opts[:branch] if opts.branch?
+    @user = opts[:user] if opts.user?
+    @tomcat_user = opts[:tomcat] if opts.tomcat?
     @version = opts.version? ? opts[:version] : Time.now.strftime("%Y%m%d%H%M")
     @new_build = opts.version? ? false : true
     @nostart = true if opts.nostart?
@@ -36,12 +41,12 @@ class Pushycat
 
   def what_to_do
     if @new_build == true
-      puts "I will check out the latest source from #{@branch} branch"
-      puts "I will build a war named #{@application}.war.#{@version}"
+      puts "I will check out the latest source from #{@branch} branch into #{@build_dir}"
+      puts "I will build a war named #{@application}.war.#{@version} and store it in #{@backup_dir}"
     else
       puts "I will use the existing war file #{@application}.war.#{@version}"
     end
-    puts "I will copy the war #{@application}.war.#{@version} to the server #{@server}"
+    puts "I will copy the war #{@application}.war.#{@version} to the server #{@server} as user #{@user}"
     unless @nostart == true
       puts "I will stop the tomcat as user #{@tomcat_user}"
       puts "I will delete the directory #{@webapps_dir}/#{@application} as user #{@user}"
@@ -55,10 +60,10 @@ class Pushycat
     if @new_build
       puts "*** pulling latest version from github for branch #{@branch}"
       execute = []
+      execute << "rm -Rf #{@build_dir}"
+      execute << "git clone #{@repository} #{@build_dir}"
       execute << "cd #{@build_dir}"
-      execute << "git config remote.origin.url #{@repository}"
-      execute << "git config remote.origin.fetch +refs/heads/#{@branch}:refs/remotes/origin/#{@branch}"
-      execute << "git pull origin"
+      execute << "git checkout -b #{@branch}"
       execute = execute.join(" && ")
 
       output = `#{execute}`
