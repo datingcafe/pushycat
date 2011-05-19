@@ -19,4 +19,4 @@ deploy.rb -h
     -u, --user         user for ssh login
     -t, --tomcat       user for tomcat
     -h, --help         Print this message
-``
+```
