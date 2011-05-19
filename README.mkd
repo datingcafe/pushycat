@@ -14,7 +14,7 @@ Usage:
 deploy.rb -h
     -s, --server       Server to be deployed
     -b, --branch       Branch to use
-    -n, --nostart      avoid restarting the server
+    -n, --restart      restart the server. Doesn\'t work to avoid restart
     -v, --version      use an older war version YYYYMMDDHHMM
     -u, --user         user for ssh login
     -t, --tomcat       user for tomcat
