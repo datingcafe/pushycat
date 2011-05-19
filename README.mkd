@@ -1,0 +1,22 @@
+PushyCat
+========
+
+Introduction
+------------
+
+We use this script to deploy our Grails application to our tomcat servers.
+It will restart the tomcats, if wanted.
+You can rollback to an earlier version by giving the version number.
+
+Usage:
+------
+```bash
+deploy.rb -h
+    -s, --server       Server to be deployed
+    -b, --branch       Branch to use
+    -n, --nostart      avoid restarting the server
+    -v, --version      use an older war version YYYYMMDDHHMM
+    -u, --user         user for ssh login
+    -t, --tomcat       user for tomcat
+    -h, --help         Print this message
+``
