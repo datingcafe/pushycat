@@ -1,0 +1,33 @@
+# server where the new war will be deployed
+server: www.google.com
+
+# user to be used to deploy the war
+user: deployer
+
+# user needed to delete app directory
+tomcat_user: tomcat
+
+# default branch for pull
+branch: release
+
+# the webapps dir where the new war will be copied to
+# the old extracted app directory will be deleted
+webapps_dir: /srv/www/webapps
+
+# directory on the buildserver where the code will be
+# hosted and the war will be build
+build_dir: /opt/pushycat/application
+
+# diretory where old versions are stored
+backup_dir: /opt/pushycat/backup
+
+# github repository url
+repository: git@github.com:project/repository.git
+
+# the name of the application which will be used for
+# naming the war and deleting the old app directory
+application: MyApplication
+
+# if set to true, the server will be restarted automatically
+restart: false
+
