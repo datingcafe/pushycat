@@ -18,7 +18,7 @@ elsif answer.downcase == "y"
   pc.build_war
   pc.copy_war
 
-  unless pc.nostart == true 
+  if pc.restart == true 
     pc.stop_tomcat
     pc.clean_webapps
     pc.install_war

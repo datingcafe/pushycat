@@ -4,7 +4,7 @@ class Pushycat
   require 'yaml'
   require 'net/ssh'
 
-  attr :nostart
+  attr :restart
 
   def initialize
     load_config
@@ -19,13 +19,13 @@ class Pushycat
 
   def get_options
     opts = Slop.parse do
-      on :s, :server, 'Server to be deployed', :optional => true
-      on :b, :branch, 'Branch to use', :optional => true
-      on :n, :nostart, 'avoid restarting the server'
+      on :s, :server, 'server to be deployed', :optional => true
+      on :b, :branch, 'branch to use', :optional => true
+      on :r, :restart, 'restart the server. Doesn\'t work to avoid restart'
       on :v, :version, 'use an older war version YYYYMMDDHHMM', :optional => true
       on :u, :user, 'user for ssh login', :optional => true   
       on :t, :tomcat, 'user for tomcat', :optional => true   
-      on :h, :help, 'Print this message', :tail => true do
+      on :h, :help, 'print this message', :tail => true do
         puts help
         exit
       end
@@ -36,7 +36,7 @@ class Pushycat
     @tomcat_user = opts[:tomcat] if opts.tomcat?
     @version = opts.version? ? opts[:version] : Time.now.strftime("%Y%m%d%H%M")
     @new_build = opts.version? ? false : true
-    @nostart = true if opts.nostart?
+    @restart = true if opts.restart?
   end
 
   def what_to_do
@@ -47,7 +47,7 @@ class Pushycat
       puts "I will use the existing war file #{@application}.war.#{@version}"
     end
     puts "I will copy the war #{@application}.war.#{@version} to the server #{@server} as user #{@user}"
-    unless @nostart == true
+    if @restart == true
       puts "I will stop the tomcat as user #{@tomcat_user}"
       puts "I will delete the directory #{@webapps_dir}/#{@application} as user #{@user}"
       puts "I will delete the war file #{@webapps_dir}/#{@application}.war as user #{@user}"
@@ -108,7 +108,28 @@ class Pushycat
         puts output
       end
 
+
+      puts "*** waiting 15 seconds for tomcat to shutdown completely"
+      sleep 15
+
       #TODO: add another loop, if the tomcat process didn't shut down correctly
+      # ps -Cjava -opid,args | grep tomcat | cut -d\  -f1
+      #
+      output = ssh.exec!("ps -Cjava -opid,args | grep tomcat | cut -d\  -f1")
+
+      if output && outout.to_i > 1
+        puts "*** tomcat still running with pid #{output}"
+
+        puts "trying again to stop it"
+        output = ssh.exec!("sudo -u #{@tomcat_user} /etc/init.d/tomcat stop")
+
+        if output =~/\[OK\]/
+          puts "*** tomcat stopped"
+        else
+          puts output
+          puts "*** please kill tomcat manually"
+        end
+      end
     end
   end
   def clean_webapps
