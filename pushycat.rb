@@ -63,7 +63,8 @@ class Pushycat
       execute << "rm -Rf #{@build_dir}"
       execute << "git clone #{@repository} #{@build_dir}"
       execute << "cd #{@build_dir}"
-      execute << "git checkout -b #{@branch}"
+      execute << "git remote update"
+      execute << "git checkout -t origin/#{@branch}"
       execute = execute.join(" && ")
 
       output = `#{execute}`
@@ -115,9 +116,9 @@ class Pushycat
       #TODO: add another loop, if the tomcat process didn't shut down correctly
       # ps -Cjava -opid,args | grep tomcat | cut -d\  -f1
       #
-      output = ssh.exec!("ps -Cjava -opid,args | grep tomcat | cut -d\  -f1")
+      output = ssh.exec!("ps -Cjava -opid,args | grep tomcat | cut -c1-5")
 
-      if output && outout.to_i > 1
+      if output && output.to_i > 1
         puts "*** tomcat still running with pid #{output}"
 
         puts "trying again to stop it"
@@ -155,14 +156,24 @@ class Pushycat
   end
   def start_tomcat
     Net::SSH.start(@server, @user) do |ssh|
-      puts "*** starting tomcat on #{@server}"
-      execute = []
-      output = ssh.exec!("sudo -u #{@tomcat_user} /etc/init.d/tomcat start")
 
-      if output =~/\[OK\]/
-        puts "*** tomcat started"
-      else
+      output = ssh.exec!("ps -Cjava -opid,args | grep tomcat | cut -c1-5")
+
+      if output && output.to_i > 1
+        puts "*** tomcat still running with pid #{output}"
+        puts "*** trying to restart tomcat on #{@server}"
+        output = ssh.exec!("sudo -u #{@tomcat_user} /etc/init.d/tomcat restart")
+        
         puts output
+      else
+        puts "*** starting tomcat on #{@server}"
+        output = ssh.exec!("sudo -u #{@tomcat_user} /etc/init.d/tomcat start")
+
+        if output =~/\[OK\]/
+          puts "*** tomcat started"
+        else
+          puts output
+        end
       end
     end
   end
