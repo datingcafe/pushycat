@@ -64,7 +64,7 @@ class Pushycat
       execute << "git clone #{@repository} #{@build_dir}"
       execute << "cd #{@build_dir}"
       execute << "git remote update"
-      execute << "git checkout -t origin/#{@branch}"
+      execute << "git checkout -t -b #{@branch} origin/#{@branch}"
       execute = execute.join(" && ")
 
       output = `#{execute}`
@@ -76,7 +76,7 @@ class Pushycat
 
   def build_war
     if @new_build
-      puts "*** building prod war #{@backup_dir}/#{@application}.war.#{@version}"
+      puts "*** building prod war --non-interactive #{@backup_dir}/#{@application}.war.#{@version}"
       execute = []
       execute << "cd #{@build_dir}"
       execute << "/opt/grails/bin/grails prod war #{@backup_dir}/#{@application}.war.#{@version}"
