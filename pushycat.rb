@@ -99,40 +99,38 @@ class Pushycat
 
   def stop_tomcat
     Net::SSH.start(@server, @user) do |ssh|
-      puts "*** stopping tomcat on #{@server}"
       execute = []
-      output = ssh.exec!("sudo -u #{@tomcat_user} /etc/init.d/tomcat stop")
+      retries = 0
+      puts "*** stopping tomcat on #{@server}"
+      puts tomcat_shutdown
 
-      if output =~/\[OK\]/
+      if !tomcat_running?
         puts "*** tomcat stopped"
       else
-        puts output
-      end
+        puts "*** waiting 30 seconds for tomcat to shutdown completely"
+        sleep 30
 
+        while tomcat_running? && retries < 5 do
+          puts "*** tomcat still running"
+          sleep 30
+          retries += 1
+        end
 
-      puts "*** waiting 15 seconds for tomcat to shutdown completely"
-      sleep 15
+        if tomcat_running?
+          puts "trying again to stop it"
+          puts tomcat_shutdown
+          sleep 30
+        end
 
-      #TODO: add another loop, if the tomcat process didn't shut down correctly
-      # ps -Cjava -opid,args | grep tomcat | cut -d\  -f1
-      #
-      output = ssh.exec!("ps -Cjava -opid,args | grep tomcat | cut -c1-5")
-
-      if output && output.to_i > 1
-        puts "*** tomcat still running with pid #{output}"
-
-        puts "trying again to stop it"
-        output = ssh.exec!("sudo -u #{@tomcat_user} /etc/init.d/tomcat stop")
-
-        if output =~/\[OK\]/
-          puts "*** tomcat stopped"
-        else
-          puts output
+        if tomcat_running?
           puts "*** please kill tomcat manually"
+        else
+          puts "*** tomcat stopped"
         end
       end
     end
   end
+
   def clean_webapps
     Net::SSH.start(@server, @user) do |ssh|
       puts "*** removing #{@webapps_dir}/#{@application}"
@@ -176,5 +174,14 @@ class Pushycat
         end
       end
     end
+  end
+
+  private
+  def tomcat_shutdown
+      output = ssh.exec!("sudo -u #{@tomcat_user} /etc/init.d/tomcat stop")
+  end
+  def tomcat_running?
+      output = ssh.exec!("ps -Cjava -opid,args | grep tomcat | grep -v solr | cut -c1-5")
+      output.to_i > 0
   end
 end
