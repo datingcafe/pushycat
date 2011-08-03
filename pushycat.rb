@@ -102,7 +102,7 @@ class Pushycat
       execute = []
       retries = 0
       puts "*** stopping tomcat on #{@server}"
-      puts tomcat_shutdown(ssh)
+      puts tomcatctl("stop", ssh)
 
       if !tomcat_running?(ssh)
         puts "*** tomcat stopped"
@@ -118,7 +118,7 @@ class Pushycat
 
         if tomcat_running?(ssh)
           puts "trying again to stop it"
-          puts tomcat_shutdown(ssh)
+          puts tomcatctl("stop", ssh)
           sleep 30
         end
 
@@ -152,34 +152,26 @@ class Pushycat
        puts output
      end
   end
+  
   def start_tomcat
     Net::SSH.start(@server, @user) do |ssh|
 
-      output = ssh.exec!("ps -Cjava -opid,args | grep tomcat | cut -c1-5")
-
-      if output && output.to_i > 1
-        puts "*** tomcat still running with pid #{output}"
-        puts "*** trying to restart tomcat on #{@server}"
-        output = ssh.exec!("sudo -u #{@tomcat_user} /etc/init.d/tomcat restart")
-        
-        puts output
+      if tomcat_running?(ssh)
+        puts "*** tomcat still running"
+        puts "*** trying to restart..."
+        tomcatctl("restart",ssh)
       else
         puts "*** starting tomcat on #{@server}"
-        output = ssh.exec!("sudo -u #{@tomcat_user} /etc/init.d/tomcat start")
-
-        if output =~/\[OK\]/
-          puts "*** tomcat started"
-        else
-          puts output
-        end
+        tomcatctl("start",ssh)
       end
     end
   end
 
   private
-  def tomcat_shutdown(ssh)
-      output = ssh.exec!("sudo -u #{@tomcat_user} /etc/init.d/tomcat stop")
+  def tomcatctl(command,ssh)
+      output = ssh.exec!("sudo -u #{@tomcat_user} /etc/init.d/tomcat #{command}")
   end
+
   def tomcat_running?(ssh)
       output = ssh.exec!("ps -Cjava -opid,args | grep tomcat | grep -v solr | cut -c1-5")
       output.to_i > 0
