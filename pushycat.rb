@@ -104,25 +104,25 @@ class Pushycat
       puts "*** stopping tomcat on #{@server}"
       puts tomcat_shutdown(ssh)
 
-      if !tomcat_running(ssh)?
+      if !tomcat_running?(ssh)
         puts "*** tomcat stopped"
       else
         puts "*** waiting 30 seconds for tomcat to shutdown completely"
         sleep 30
 
-        while tomcat_running(ssh)? && retries < 5 do
+        while tomcat_running?(ssh) && retries < 5 do
           puts "*** tomcat still running"
           sleep 30
           retries += 1
         end
 
-        if tomcat_running(ssh)?
+        if tomcat_running?(ssh)
           puts "trying again to stop it"
           puts tomcat_shutdown(ssh)
           sleep 30
         end
 
-        if tomcat_running(ssh)?
+        if tomcat_running?(ssh)
           puts "*** please kill tomcat manually"
         else
           puts "*** tomcat stopped"
@@ -180,7 +180,7 @@ class Pushycat
   def tomcat_shutdown(ssh)
       output = ssh.exec!("sudo -u #{@tomcat_user} /etc/init.d/tomcat stop")
   end
-  def tomcat_running(ssh)?
+  def tomcat_running?(ssh)
       output = ssh.exec!("ps -Cjava -opid,args | grep tomcat | grep -v solr | cut -c1-5")
       output.to_i > 0
   end
