@@ -23,8 +23,9 @@ class Pushycat
       on :b, :branch, 'branch to use', :optional => true
       on :r, :restart, 'restart the server. Doesn\'t work to avoid restart'
       on :v, :version, 'use an older war version YYYYMMDDHHMM', :optional => true
-      on :u, :user, 'user for ssh login', :optional => true   
-      on :t, :tomcat, 'user for tomcat', :optional => true   
+      on :u, :user, 'user for ssh login', :optional => true
+      on :t, :tomcat, 'user for tomcat', :optional => true
+      on :e, :environment, 'environment to build war for', :optional => true
       on :h, :help, 'print this message', :tail => true do
         puts help
         exit
@@ -34,6 +35,7 @@ class Pushycat
     @branch = opts[:branch] if opts.branch?
     @user = opts[:user] if opts.user?
     @tomcat_user = opts[:tomcat] if opts.tomcat?
+    @environment = opts[:environment] if opts.environment?
     @version = opts.version? ? opts[:version] : Time.now.strftime("%Y%m%d%H%M")
     @new_build = opts.version? ? false : true
     @restart = true if opts.restart?
@@ -76,10 +78,10 @@ class Pushycat
 
   def build_war
     if @new_build
-      puts "*** building prod war --non-interactive #{@backup_dir}/#{@application}.war.#{@version}"
+      puts "*** building #{@environment} war --non-interactive #{@backup_dir}/#{@application}.war.#{@version}"
       execute = []
       execute << "cd #{@build_dir}"
-      execute << "/opt/grails/bin/grails prod war #{@backup_dir}/#{@application}.war.#{@version}"
+      execute << "/opt/grails/bin/grails #{@environment} war #{@backup_dir}/#{@application}.war.#{@version}"
       execute = execute.join(" && ")
 
       output = `#{execute}`
