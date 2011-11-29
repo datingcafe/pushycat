@@ -78,10 +78,10 @@ class Pushycat
 
   def build_war
     if @new_build
-      puts "*** building #{@environment} war --non-interactive #{@backup_dir}/#{@application}.war.#{@version}"
+      puts "*** building grails.env=#{@environment} war --non-interactive #{@backup_dir}/#{@application}.war.#{@version}"
       execute = []
       execute << "cd #{@build_dir}"
-      execute << "/opt/grails/bin/grails #{@environment} war #{@backup_dir}/#{@application}.war.#{@version}"
+      execute << "/opt/grails/bin/grails grails.env=#{@environment} war #{@backup_dir}/#{@application}.war.#{@version}"
       execute = execute.join(" && ")
 
       output = `#{execute}`
