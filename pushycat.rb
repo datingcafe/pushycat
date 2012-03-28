@@ -171,7 +171,7 @@ class Pushycat
 
   private
   def tomcatctl(command,ssh)
-      output = ssh.exec!("sudo -u #{@tomcat_user} /etc/init.d/tomcat #{command}")
+      output = ssh.exec!("sudo /etc/init.d/tomcat #{command}")
   end
 
   def tomcat_running?(ssh)
