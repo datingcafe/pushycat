@@ -65,6 +65,12 @@ class Pushycat
       execute << "rm -Rf #{@build_dir}"
       execute << "git clone #{@repository} #{@build_dir}"
       execute << "cd #{@build_dir}"
+      execute << "git submodule init"
+      execute << "git submodule update"
+      execute << "cd #{@build_dir}/lib/sharedClasses"
+      execute << "git checkout master"
+      execute << "git pull"
+      execute << "cd #{@build_dir}"
       execute << "git remote update"
       execute << "git checkout -t -b #{@branch} origin/#{@branch}"
       execute = execute.join(" && ")
