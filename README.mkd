@@ -8,6 +8,8 @@ We use this script to deploy our Grails application to our tomcat servers.
 It will restart the tomcats, if wanted.
 You can rollback to an earlier version by giving the version number.
 
+Test
+
 Usage:
 ------
 ```bash
